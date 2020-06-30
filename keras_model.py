@@ -1,3 +1,5 @@
+import os, sys
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import pandas
 import numpy as np
 import tensorflow as tf
@@ -9,7 +11,6 @@ from immunomodeling_dataset import ScoreDataset
 '''
 Implement oversampling (of training set not val) prior to training.
 '''
-hidden_size = 5
 
 #config = tf.ConfigProto( device_count = {'GPU': 1 , 'CPU': 12} )
 #sess = tf.Session(config=config)
@@ -30,20 +31,24 @@ train_data = ScoreDataset(tr_X, tr_Y, oversample=True)
 test_data = ScoreDataset(te_X, te_Y, oversample=False)
 
 def buildmodel(n_hidden):
-	model = tf.keras.models.Sequential([tf.keras.layers.Dense(n_hidden, input_shape=(81,),activation=tf.nn.relu,use_bias=True,kernel_initializer=tf.keras.initializers.glorot_normal),
+	model = tf.keras.models.Sequential([tf.keras.layers.Dense(n_hidden, input_shape=(tr_X.shape[1],),activation=tf.nn.relu,use_bias=True,kernel_initializer=tf.keras.initializers.glorot_normal),
 	tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True)])
-	model.compile(loss='binary_crossentropy',optimizer=tf.keras.optimizers.Adam(learning_rate=1e-2), metrics=[tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.AUC()])
+	model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=1e-2), metrics=[tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.AUC()])
 	return(model)
 
-cvscores = []
-i = 0
-for train_X, train_Y, val_X, val_Y in train_data.get_training_batch():
-	model = buildmodel(hidden_size)
-	model.fit(train_X, train_Y, epochs=100, batch_size=128, callbacks=[callback], shuffle=True, verbose=0)
-	scores = model.evaluate(val_X, val_Y, verbose=0)
-	print(f'Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{scores[i]:2f}' for i in range(len(scores))]))
-	cvscores.append(scores)
-	i += 1
-performance = np.mean(cvscores, axis=0)
-error = np.std(cvscores, axis=0)
-print(', '.join([f'{model.metrics_names[i]}: {performance[i]:2f} +/- {error[i]:2f}' for i in range(len(performance))]))
+h_nodes = sys.argv[1].split(',')
+
+for hidden_size in h_nodes:
+	print(f'Hidden layer size: {hidden_size}')
+	cvscores = []
+	i = 0
+	for train_X, train_Y, val_X, val_Y in train_data.get_training_batch():
+		model = buildmodel(hidden_size)
+		model.fit(train_X, train_Y, epochs=100, batch_size=128, callbacks=[callback], shuffle=True, verbose=0)
+		scores = model.evaluate(val_X, val_Y, verbose=0)
+		print(f'Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{scores[i]:2f}' for i in range(len(scores))]))
+		cvscores.append(scores)
+		i += 1
+	performance = np.mean(cvscores, axis=0)
+	error = np.std(cvscores, axis=0)
+	print(', '.join([f'{model.metrics_names[i]}: {performance[i]:2f} +/- {error[i]:2f}' for i in range(len(performance))]))

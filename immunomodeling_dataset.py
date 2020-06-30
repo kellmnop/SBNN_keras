@@ -37,17 +37,17 @@ class ScoreDataset:
 		idx1 = [i for i in range(len(Y)) if Y[i] == 1]
 		idx0 = [i for i in range(len(Y)) if Y[i] == 0]
 		if float(sum(Y))/len(Y) < 0.5:
-			print('Oversampling class 1.')
+			#print('Oversampling class 1.')
 			# number of class 1 to resample
 			target = len(Y) - 2*len(idx1)
-			resample_idx = np.random.choice(idx1,size=target,replace=True)
+			resample_idx = np.random.choice(idx1, size=target, replace=True)
 		elif float(sum(Y))/len(Y) > 0.5:
-			print('Oversampling class 0.')
+			#print('Oversampling class 0.')
 			# number of class 0 to resample
 			target = len(Y) - 2*len(idx0)
-			resample_idx = np.random.choice(idx0,size=target,replace=True)
+			resample_idx = np.random.choice(idx0, size=target, replace=True)
 		else:
-			print('Class sizes already equal (no oversampling).')
+			#print('Class sizes already equal (no oversampling).')
 			return
 		return resample_idx
 
