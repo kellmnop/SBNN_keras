@@ -51,7 +51,7 @@ class ScoreDataset:
 			return
 		return resample_idx
 
-	def get_splits(self, folds=5):
+	def get_splits(self, folds):
 		'''
 		DOC
 		'''
