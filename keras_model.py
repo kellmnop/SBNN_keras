@@ -1,27 +1,33 @@
-import os, sys
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import os, sys, argparse
 import pandas
 import numpy as np
-import tensorflow as tf
 from sklearn.model_selection import RepeatedKFold, cross_val_score
-from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
-import matplotlib.pyplot as plt
 from immunomodeling_dataset import ScoreDataset
 
-'''
-Implement oversampling (of training set not val) prior to training.
-'''
+parser = argparse.ArgumentParser()
+parser.add_argument('-q', '--quiet', action='store_true', dest='quiet', required=False, default=False, help='')
+parser.add_argument('--train', action='store', dest='train_file', required=True, help='Training data in csv format with binary immunogenicity in column 2 and input features in columns 3:end')
+parser.add_argument('--test', action='store', dest='test_file', required=True, help='Validation/test data in csv format with binary immunogenicity in column 2 and input features in columns 3:end')
+parser.add_argument('-n', '--hidden_size', action='store', dest='h_nodes', required=False, default='5', help='Number(s) of nodes in the hidden layer to train with. If more than one, argument should be a comma-separated list with no whitespace.')
+#parser.add_argument('-', '--', action='', dest='', required=, default='', help='')
+args = vars(parser.parse_args())
 
-config = tf.ConfigProto( device_count = {'GPU': 2 , 'CPU': 8} )
-sess = tf.Session(config=config)
-tf.keras.backend.set_session(sess)
-callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10, restore_best_weights=True)
+if args['quiet']: 
+	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+else:
+	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
-trdata = pandas.read_csv('SBNN-feature_matrix_old.csv')
+import tensorflow as tf
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
+import matplotlib.pyplot as plt
+
+callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=50, restore_best_weights=True)
+
+trdata = pandas.read_csv(args['train_file'])
 tr_X = trdata.iloc[:, 3:].values
 tr_Y = trdata.iloc[:, 2].values
 
-tedata = pandas.read_csv('SBNN-feature_matrix_old-TEST.csv')
+tedata = pandas.read_csv(args['test_file'])
 te_X = tedata.iloc[:, 3:].values
 te_Y = tedata.iloc[:, 2].values
 
@@ -36,8 +42,9 @@ def buildmodel(n_hidden):
 	model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=1e-2), metrics=[tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.AUC()])
 	return(model)
 
-h_nodes = sys.argv[1].split(',')
+h_nodes = [int(x) for x in args['h_nodes'].split(',')]
 
+training_perf = []
 for hidden_size in h_nodes:
 	print(f'Hidden layer size: {hidden_size}')
 	cvscores = []
@@ -45,12 +52,12 @@ for hidden_size in h_nodes:
 	for train_X, train_Y, val_X, val_Y in train_data.get_training_batch():
 		model = None
 		model = buildmodel(hidden_size)
-		#model.fit(train_X, train_Y, epochs=100, batch_size=128, callbacks=[callback], shuffle=True, verbose=0)
-		model.fit(train_X, train_Y, epochs=100, batch_size=128, shuffle=True, verbose=0)
-		scores = model.evaluate(val_X, val_Y, verbose=0)
+		model.fit(train_X, train_Y, epochs=500, batch_size=64, callbacks=[callback], shuffle=True, verbose=0, validation_data=(val_X, val_Y))
 		print(f'Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{scores[i]:2f}' for i in range(len(scores))]))
 		cvscores.append(scores)
 		i += 1
 	performance = np.mean(cvscores, axis=0)
 	error = np.std(cvscores, axis=0)
 	print(', '.join([f'{model.metrics_names[i]}: {performance[i]:2f} +/- {error[i]:2f}' for i in range(len(performance))]))
+
+
