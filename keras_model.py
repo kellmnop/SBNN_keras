@@ -63,9 +63,9 @@ for hidden_size in h_nodes:
 		val_scores = model.evaluate(val_X, val_Y, verbose=v)
 		test_scores = model.evaluate(test_data.X, test_data.Y, verbose=v)
 		if v: 
-			print(f'\tTraining Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{train_scores[i]:2f}' for i in range(len(train_scores))]))
-			print(f'\tValidation Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{val_scores[i]:2f}' for i in range(len(val_scores))]))
-			print(f'\tTest set '+', '.join([f'{model.metrics_names[i]}:{test_scores[i]:2f}' for i in range(len(test_scores))]))
+			print(f'\tTraining Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{train_scores[i]:.3f}' for i in range(len(train_scores))]))
+			print(f'\tValidation Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{val_scores[i]:.3f}' for i in range(len(val_scores))]))
+			print(f'\tTest set '+', '.join([f'{model.metrics_names[i]}:{test_scores[i]:.3f}' for i in range(len(test_scores))]))
 		cvscores.append(train_scores+val_scores+test_scores)
 		i += 1
 	performance = np.mean(cvscores, axis=0)
@@ -79,9 +79,9 @@ for hidden_size in h_nodes:
 	training_perf['test_binary_crossentropy'].append(performance[6])
 	training_perf['test_binary_accuracy'].append(performance[7])
 	training_perf['test_auc'].append(performance[8])
-	print(', '.join([f'{model.metrics_names[i]}: {performance[i]:2f} +/- {error[i]:2f}' for i in (0, 1, 2)]))
-	print(', '.join([f'val_{model.metrics_names[i]}: {performance[i+3]:2f} +/- {error[i+3]:2f}' for i in (0, 1, 2)]))
-	print(', '.join([f'test_{model.metrics_names[i]}: {performance[i+6]:2f} +/- {error[i+6]:2f}' for i in (0, 1, 2)]))
+	print(', '.join([f'{model.metrics_names[i]}: {performance[i]:.3f} +/- {error[i]:.3f}' for i in (0, 1, 2)]))
+	print(', '.join([f'val_{model.metrics_names[i]}: {performance[i+3]:.3f} +/- {error[i+3]:.3f}' for i in (0, 1, 2)]))
+	print(', '.join([f'test_{model.metrics_names[i]}: {performance[i+6]:.3f} +/- {error[i+6]:.3f}' for i in (0, 1, 2)]))
 
 
 if args['output']:
