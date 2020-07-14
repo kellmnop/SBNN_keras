@@ -41,6 +41,8 @@ test_data = ScoreDataset(te_X, te_Y, oversample=False)
 
 def buildmodel(n_hidden):
 	model = tf.keras.models.Sequential([tf.keras.layers.Dense(n_hidden, input_shape=(tr_X.shape[1],),activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.keras.initializers.glorot_normal),
+	tf.keras.layers.Dropout(0.5), 
+	tf.keras.layers.Dense(n_hidden, iactivation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.keras.initializers.glorot_normal),
 	tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True)])
 	model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=1e-2), metrics=[tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.AUC()])
 	return(model)
@@ -58,7 +60,8 @@ for hidden_size in h_nodes:
 	for train_X, train_Y, val_X, val_Y in train_data.get_training_batch():
 		model = None
 		model = buildmodel(hidden_size)
-		model.fit(train_X, train_Y, epochs=500, batch_size=64, callbacks=[early_stop], shuffle=True, verbose=v, validation_data=(val_X, val_Y))
+		#model.fit(train_X, train_Y, epochs=1000, batch_size=64, callbacks=[early_stop], shuffle=True, verbose=v, validation_data=(val_X, val_Y))
+		model.fit(train_X, train_Y, epochs=1000, batch_size=64, shuffle=True, verbose=v, validation_data=(val_X, val_Y))
 		train_scores = model.evaluate(train_X, train_Y, verbose=v)
 		val_scores = model.evaluate(val_X, val_Y, verbose=v)
 		test_scores = model.evaluate(test_data.X, test_data.Y, verbose=v)
