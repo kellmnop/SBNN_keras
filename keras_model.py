@@ -13,7 +13,7 @@ parser.add_argument('-k', '--kfold', action='store', dest='folds', required=Fals
 parser.add_argument('-o', '--output', action='store_true', dest='output', required=False, default=False, help='Switch to save training/test performance metrics to files. Type is vanilla .csv, path is current directory, default filename is same as input files with ".perf" extension.')
 args = vars(parser.parse_args())
 
-if args['quiet']: 
+if args['quiet']:
 	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 	v = 0
 else:
@@ -41,16 +41,15 @@ test_data = ScoreDataset(te_X, te_Y, oversample=False)
 
 def buildmodel(n_hidden):
 	model = tf.keras.models.Sequential([tf.keras.layers.Dense(n_hidden, input_shape=(tr_X.shape[1],),activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.keras.initializers.glorot_normal),
-	tf.keras.layers.Dropout(0.5), 
-	tf.keras.layers.Dense(n_hidden, iactivation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.keras.initializers.glorot_normal),
+	tf.keras.layers.Dropout(0.5),
 	tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True)])
 	model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=1e-2), metrics=[tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.AUC()])
 	return(model)
 
 h_nodes = [int(x) for x in args['h_nodes'].split(',')]
 
-training_perf = {'hidden_sizes' : h_nodes, 'binary_crossentropy' : [], 'binary_accuracy' : [], 'auc' : [], 
-		'val_binary_crossentropy' : [], 'val_binary_accuracy' : [], 'val_auc' : [], 
+training_perf = {'hidden_sizes' : h_nodes, 'binary_crossentropy' : [], 'binary_accuracy' : [], 'auc' : [],
+		'val_binary_crossentropy' : [], 'val_binary_accuracy' : [], 'val_auc' : [],
 		'test_binary_crossentropy' : [], 'test_binary_accuracy' : [], 'test_auc' : []}
 
 for hidden_size in h_nodes:
@@ -65,7 +64,7 @@ for hidden_size in h_nodes:
 		train_scores = model.evaluate(train_X, train_Y, verbose=v)
 		val_scores = model.evaluate(val_X, val_Y, verbose=v)
 		test_scores = model.evaluate(test_data.X, test_data.Y, verbose=v)
-		if v: 
+		if v:
 			print(f'\tTraining Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{train_scores[i]:.3f}' for i in range(len(train_scores))]))
 			print(f'\tValidation Leaf {i+1} '+', '.join([f'{model.metrics_names[i]}:{val_scores[i]:.3f}' for i in range(len(val_scores))]))
 			print(f'\tTest set '+', '.join([f'{model.metrics_names[i]}:{test_scores[i]:.3f}' for i in range(len(test_scores))]))
