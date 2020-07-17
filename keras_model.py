@@ -43,7 +43,7 @@ def buildmodel(n_hidden):
 	model = tf.keras.models.Sequential([tf.keras.layers.Dense(n_hidden, input_shape=(tr_X.shape[1],),activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.keras.initializers.glorot_normal),
 	tf.keras.layers.Dropout(0.5),
 	tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True)])
-	model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3), metrics=[tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.AUC()])
+	model.compile(loss='binary_crossentropy', optimizer=tf.keras.optimizers.Adam(learning_rate=1e-2), metrics=[tf.keras.metrics.BinaryAccuracy(), tf.keras.metrics.AUC()])
 	return(model)
 
 h_nodes = [int(x) for x in args['h_nodes'].split(',')]
