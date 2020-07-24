@@ -5,6 +5,7 @@ Python3 Tensorflow 2.0/Keras script for training artificial neural networks to p
 - test/validation data from Riley et al. 2019 (SBNN-feature_matrix_old-TEST.csv)
 - neural network training script intended to faithfully mirror the Matlab ANN from Riley et al. 2019.
 
+```
 usage: keras_model.py [-h] [-q] --train TRAIN_FILE --test TEST_FILE
                       [-n H_NODES] [-k FOLDS] [-o]
 
@@ -26,3 +27,4 @@ optional arguments:
                         files. Type is vanilla .csv, path is current
                         directory, default filename is same as input files
                         with ".perf" extension.
+```
