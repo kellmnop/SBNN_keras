@@ -13,6 +13,7 @@ parser.add_argument('-k', '--kfold', action='store', dest='folds', required=Fals
 parser.add_argument('-o', '--output', action='store_true', dest='output', required=False, default=False, help='Switch to save training/test performance metrics to files. Type is vanilla .csv, path is current directory, default filename is same as input files with ".perf" extension.')
 args = vars(parser.parse_args())
 
+# Whether to print out a LOT of tf output or not.
 if args['quiet']:
 	os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 	v = 0
@@ -24,8 +25,10 @@ import tensorflow as tf
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 import matplotlib.pyplot as plt
 
+# Right now, training is to 1000 epochs. This callback stops training early if the loss to the validation fold does not decrease for 50 consecutive epochs.
 early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=50, mode='min', restore_best_weights=True)
 
+# Template train and test data available in repo. Hard coded columns (for now).
 trdata = pandas.read_csv(args['train_file'])
 tr_X = trdata.iloc[:, 2:].values
 tr_Y = trdata.iloc[:, 1].values
@@ -34,12 +37,15 @@ tedata = pandas.read_csv(args['test_file'])
 te_X = tedata.iloc[:, 2:].values
 te_Y = tedata.iloc[:, 1].values
 
+# If this fails, there was some data mix up.
 assert tr_X.shape[1] == te_X.shape[1], "Training and test data do not have the same number of features!"
 
+# Uses the data structure in immunomodeling_dataset.py.
 train_data = ScoreDataset(tr_X, tr_Y, oversample=True, kfold=args['folds'])
 test_data = ScoreDataset(te_X, te_Y, oversample=False)
 
 def buildmodel(n_hidden):
+	# Function to generate new ANN with the same architecture for training on new leafs.
 	model = tf.keras.models.Sequential([tf.keras.layers.Dense(n_hidden, input_shape=(tr_X.shape[1],),activation=tf.nn.leaky_relu, use_bias=True, kernel_initializer=tf.keras.initializers.glorot_normal),
 	tf.keras.layers.Dropout(0.5),
 	tf.keras.layers.Dense(1, activation=tf.nn.sigmoid, use_bias=True)])
@@ -48,6 +54,7 @@ def buildmodel(n_hidden):
 
 h_nodes = [int(x) for x in args['h_nodes'].split(',')]
 
+# Stores metrics for printing.
 training_perf = {'hidden_sizes' : h_nodes, 'binary_crossentropy' : [], 'binary_accuracy' : [], 'auc' : [],
 		'val_binary_crossentropy' : [], 'val_binary_accuracy' : [], 'val_auc' : [],
 		'test_binary_crossentropy' : [], 'test_binary_accuracy' : [], 'test_auc' : []}
@@ -59,8 +66,8 @@ for hidden_size in h_nodes:
 	for train_X, train_Y, val_X, val_Y in train_data.get_training_batch():
 		model = None
 		model = buildmodel(hidden_size)
-		#model.fit(train_X, train_Y, epochs=1000, batch_size=64, callbacks=[early_stop], shuffle=True, verbose=v, validation_data=(val_X, val_Y))
-		model.fit(train_X, train_Y, epochs=1000, batch_size=64, shuffle=True, verbose=v, validation_data=(val_X, val_Y))
+		model.fit(train_X, train_Y, epochs=1000, batch_size=64, callbacks=[early_stop], shuffle=True, verbose=v, validation_data=(val_X, val_Y))
+		#model.fit(train_X, train_Y, epochs=1000, batch_size=64, shuffle=True, verbose=v, validation_data=(val_X, val_Y))
 		train_scores = model.evaluate(train_X, train_Y, verbose=v)
 		val_scores = model.evaluate(val_X, val_Y, verbose=v)
 		test_scores = model.evaluate(test_data.X, test_data.Y, verbose=v)
@@ -85,10 +92,8 @@ for hidden_size in h_nodes:
 	print(', '.join([f'val_{model.metrics_names[i]}: {performance[i+3]:.3f} +/- {error[i+3]:.3f}' for i in (0, 1, 2)]))
 	print(', '.join([f'test_{model.metrics_names[i]}: {performance[i+6]:.3f} +/- {error[i+6]:.3f}' for i in (0, 1, 2)]))
 
-
 if args['output']:
 	outData = pandas.DataFrame.from_dict(training_perf)
 	outname = '-'.join(args['train_file'].split('-')[0:2])+'.perf'
 	outData.to_csv(outname, index=False, header=True)
-
 

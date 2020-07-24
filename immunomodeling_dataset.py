@@ -3,7 +3,7 @@ from sklearn.model_selection import StratifiedKFold
 
 class ScoreDataset:
 	'''
-	DOC
+	Basic structure implementing data access and behavior useful for training ANN in keras/tensorflow.
 	'''
 	def __init__(self, features, labels, oversample=False, kfold=5):
 		assert len(features) == len(labels), "Labels (Y) and features (X) do not have the same number of observations!"
@@ -23,17 +23,16 @@ class ScoreDataset:
 
 	def get_x_dims(self):
 		return self.X.shape[1]
-		
+
 	def get_y_dims(self):
 		return self.Y.shape[1]
 
 	def _oversample(self, X, Y):
 		'''
-		Random resampling of immunogenic peptides to equal ratio 
+		Random resampling of immunogenic peptides to equal ratio
 		of non-immunogenic (training set only).
 		'''
-		# After working, try using SMOTE instead of random oversampling to lessen overfitting?
-		# indices of class 1
+		# Might be better ways to do this than just random oversampling -- e.g. SMOTE?
 		idx1 = [i for i in range(len(Y)) if Y[i] == 1]
 		idx0 = [i for i in range(len(Y)) if Y[i] == 0]
 		if float(sum(Y))/len(Y) < 0.5:
@@ -53,7 +52,7 @@ class ScoreDataset:
 
 	def get_splits(self, folds):
 		'''
-		DOC
+		Defines k training/validation leaves.
 		'''
 		idx = np.array([i for i in range(len(self))])
 		skf = StratifiedKFold(n_splits=folds, shuffle=True)
@@ -64,17 +63,11 @@ class ScoreDataset:
 				train_idx = np.append(train_idx, self._oversample(self.X[train_idx], self.Y[train_idx]), axis=0)
 			self.leaves.append((train_idx, val_idx))
 		self.num_leaves = folds
-	
+
 	def get_training_batch(self):
 		'''
-		DOC
-		'''	
+		Method generating data for training and validation leaves.
+		'''
 		for leaf in self.leaves:
 			yield self.X[leaf[0]], self.Y[leaf[0]], self.X[leaf[1]], self.Y[leaf[1]]
-		
-	def get_test_set(self, leaf):
-		'''
-		
-		'''
-		idx = self.leaves[leaf][1]
-		return self.X[idx,:], self.Y[idx,:]
+
