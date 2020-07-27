@@ -41,8 +41,8 @@ te_Y = tedata.iloc[:, 1].values
 assert tr_X.shape[1] == te_X.shape[1], "Training and test data do not have the same number of features!"
 
 # Uses the data structure in immunomodeling_dataset.py.
-train_data = ScoreDataset(tr_X, tr_Y, oversample=True, kfold=args['folds'])
-test_data = ScoreDataset(te_X, te_Y, oversample=False)
+train_data = ScoreDataset(tr_X, tr_Y, oversample=0.5, kfold=args['folds'])
+test_data = ScoreDataset(te_X, te_Y)
 
 def buildmodel(n_hidden):
 	# Function to generate new ANN with the same architecture for training on new leafs.
