@@ -1,13 +1,17 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import MinMaxScaler
 
 class ScoreDataset:
 	'''
 	Basic structure implementing data access and behavior useful for training ANN in keras/tensorflow.
 	'''
-	def __init__(self, features, labels, oversample=None, kfold=5):
+	def __init__(self, features, labels, oversample=None, kfold=5, norm=False):
 		assert len(features) == len(labels), "Labels (Y) and features (X) do not have the same number of observations!"
 		self.X = np.array(features).astype('float64')
+		if norm:
+			scaler = MinMaxScaler(feature_range=(-1, 1), copy=False).fit(self.X)
+			scaler.transform(self.X)
 		self.Y = np.array(labels).astype('int32').reshape(len(labels),1)
 		self.leaves = []
 		self.num_leaves = 1
