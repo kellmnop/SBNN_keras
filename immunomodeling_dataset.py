@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
 class ScoreDataset:
 	'''
@@ -12,12 +12,13 @@ class ScoreDataset:
 		if norm:
 			scaler = MinMaxScaler(feature_range=(-1, 1), copy=False).fit(self.X)
 			scaler.transform(self.X)
-		self.Y = np.array(labels).astype('int32').reshape(len(labels),1)
+		self.Y = np.array(labels).astype('int32').reshape(len(labels),-1)
 		self.leaves = []
 		self.num_leaves = 1
 		self.n_batches = 1
 		self.oversample = oversample
-		self.get_splits(kfold)
+		self.kfold = kfold
+		self.enc = OneHotEncoder() ; self.enc.fit(self.Y)
 
 	def __len__(self):
 		return len(self.X)
@@ -71,6 +72,7 @@ class ScoreDataset:
 		'''
 		Method generating data for training and validation leaves.
 		'''
+		self.get_splits(self.kfold)
 		for leaf in self.leaves:
-			yield self.X[leaf[0]], self.Y[leaf[0]], self.X[leaf[1]], self.Y[leaf[1]]
+			yield self.X[leaf[0]], self.enc.transform(self.Y[leaf[0]]).toarray(), self.X[leaf[1]], self.enc.transform(self.Y[leaf[1]]).toarray()
 
