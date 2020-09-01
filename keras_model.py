@@ -193,7 +193,7 @@ scoreRa_rc = train_anal(scoreRa_traindata, scoreRa_testdata)
 
 # Plot performance - in most frameworks this should? display the plot.
 plt = plot(old_rc, lin_rc, rad_rc, score_rc, linR_rc, radR_rc, scoreR_rc, linRa_rc, radRa_rc, scoreRa_rc)
-
+plt.show()
 # optionally, save the plot as an image
 if args['outfile']:
 	plt.savefig(args['outfile'])
