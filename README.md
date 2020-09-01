@@ -6,25 +6,24 @@ Python3 Tensorflow 2.0/Keras script for training artificial neural networks to p
 - neural network training script intended to faithfully mirror the Matlab ANN from Riley et al. 2019.
 
 ```
-usage: keras_model.py [-h] [-q] --train TRAIN_FILE --test TEST_FILE
-                      [-n H_NODES] [-k FOLDS] [-o]
+usage: keras_model.py [-h] [-q] [-t TEST_SET_SIZE] [-n H_NODES] [-k FOLDS]
+                      [-s OS] [-o OUTFILE]
 
 optional arguments:
   -h, --help            show this help message and exit
   -q, --quiet           Switch to disable tensorflow warning/log information.
-  --train TRAIN_FILE    Training data in csv format with binary immunogenicity
-                        in column index 1 and input features in columns 2:end
-  --test TEST_FILE      Test data in csv format with binary immunogenicity in
-                        column index 1 and input features in columns 2:end
+  -t TEST_SET_SIZE, --test_size TEST_SET_SIZE
+                        Proportion of total data to use in the test set
+                        (default 0.10).
   -n H_NODES, --hidden_size H_NODES
                         Number(s) of nodes in the hidden layer to train with.
-                        If more than one, argument should be a comma-separated
-                        list with no whitespace.
   -k FOLDS, --kfold FOLDS
                         Number of folds to use for kfold cross validation
                         (default 5).
-  -o, --output          Switch to save training/test performance metrics to
-                        files. Type is vanilla .csv, path is current
-                        directory, default filename is same as input files
-                        with ".perf" extension.
+  -s OS, --oversample OS
+                        Desired ratio of minority:majority class. If
+                        specified, randomly oversamples training set only to
+                        this ratio.
+  -o OUTFILE, --outfile OUTFILE
+                        Save ROC AUC plots as an image file e.g. asdf.png
 ```
